@@ -19,13 +19,19 @@ A PDF Editor-inspired document collaboration app built with Next.js, React-PDF, 
 | Category             | Technology               |
 | -------------------- | ------------------------ |
 | **Framework**        | Next.js 16+ (App Router) |
-| **UI Library**       | React 19                 |
+| **UI Library**       | React 19                |
 | **PDF Engine**       | react-pdf                |
 | **Collaboration**    | Velt SDK                 |
 | **Styling**          | Tailwind CSS             |
 | **Icons**            | Lucide React             |
 | **Language**         | TypeScript               |
 | **State Management** | React Context API        |
+
+## AI Usage
+
+- **IDE** - Antigravity
+- **Model** - Claude sonnet 4.5
+
 
 ## 📋 Prerequisites
 
@@ -92,7 +98,7 @@ adobe-pdf-velt-demo/
 │   ├── layout.tsx               # Root layout
 │   └── page.tsx                 # Entry point
 ├── public/                      # Static assets (PDF files)
-└── tailwind.config.ts           # Tailwind configuration
+
 ```
 
 ## 🔗 Velt Integration
