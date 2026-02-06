@@ -2,41 +2,36 @@
 
 A PDF Editor-inspired document collaboration app built with Next.js, React-PDF, and Velt, demonstrating real-time inline commenting and multi-user collaboration features on PDF documents.
 
-## ✨ Features
-
-- **📄 PDF Viewing** — High-fidelity PDF rendering powered by React-PDF
-- **💬 Velt Comments** — Add context-aware comments directly on the PDF
-- **🧑‍🤝‍🧑 Multi-User Collaboration** — Switch between predefined users (User 1, User 2) with unique avatars
-- **🔴 Real-Time Presence** — See who else is viewing the document
-- **🔔 Notifications** — In-app notification system powered by Velt
-- **📋 Comments Sidebar** — Manage and review all document comments
-- **🌓 Dark/Light Theme** — Toggle between themes with persistent preference
-- **🎨 Modern UI** — Built with Tailwind CSS and Lucide React icons
-- **🛠️ Toolbar Tools** — Select, Comment, Draw, Add Image, and Text tools
-
 ## 🛠 Tech Stack
 
-| Category             | Technology               |
-| -------------------- | ------------------------ |
-| **Framework**        | Next.js 16+ (App Router) |
-| **UI Library**       | React 19                |
-| **PDF Engine**       | react-pdf                |
-| **Collaboration**    | Velt SDK                 |
-| **Styling**          | Tailwind CSS             |
-| **Icons**            | Lucide React             |
-| **Language**         | TypeScript               |
-| **State Management** | React Context API        |
+| Category             | Technology                            |
+| -------------------- | ------------------------------------- |
+| **Framework**        | Next.js 16+ (App Router) + TypeScript |
+| **PDF Engine**       | react-pdf v10.3.0                     |
+| **Collaboration**    | Velt SDK v5.0.0-beta.11               |
+| **Styling**          | Tailwind CSS v4                       |
+| **Icons**            | Lucide React                          |
+| **State Management** | React Context API                     |
 
 ## AI Usage
 
 - **IDE** - Antigravity
 - **Model** - Claude sonnet 4.5
 
+### Screenshots
+
+#### Important bit for implementing the PDF to render properly
+
+<img src="./public/agentchat1.png" alt="Adobe PDF Clone" width="600"/>
+
+#### Fixed a UI aligning issue caused by the PDF viewer
+
+<img src="./public/agentchat2.png" alt="Adobe PDF Clone" width="600"/>
 
 ## 📋 Prerequisites
 
-- Node.js v16 or higher
-- npm v8 or higher (or bun/yarn/pnpm)
+- Node.js v18 or higher
+- npm v8+ / bun / yarn / pnpm
 - A Velt API Key — [Get one free](https://velt.dev)
 
 ## 🚀 Getting Started
@@ -64,7 +59,7 @@ Create a `.env.local` file in the root directory:
 NEXT_PUBLIC_VELT_API_KEY=your_velt_api_key_here
 ```
 
-💡 **Tip:** Get your API key from the [Velt Dashboard](https://dashboard.velt.dev)
+💡 **Tip:** Get your API key from the [Velt Dashboard](https://console.velt.dev)
 
 ### 4. Start Development Server
 
@@ -78,27 +73,32 @@ bun dev
 
 Navigate to `http://localhost:3000`
 
+To switch users, add the `?user=0` or `?user=1` query parameter to the URL.
+
 ## 📁 Project Structure
 
 ```
 adobe-pdf-velt-demo/
 ├── app/
 │   ├── components/
-│   │   ├── LeftToolbar.tsx      # Editor tools (Select, Draw, etc.)
-│   │   ├── Navbar.tsx           # Top navigation with user/theme controls
-│   │   ├── PDFEditor.tsx        # Main PDF handling component
-│   │   ├── UserSwitcher.tsx     # Mock user switching logic
-│   │   └── VeltCommentSetup.tsx # Velt initialization and setup
+│   │   ├── LeftToolbar.tsx          # Editor tools (Select, Draw, Comment, etc.)
+│   │   ├── navbar.tsx               # Top nav with user/theme/download controls
+│   │   ├── PDFEditor.tsx            # Main PDF viewing + Velt comments
+│   │   ├── UserSwitcher.tsx         # Mock user switching logic
+│   │   └── VeltCommentSetup.tsx     # Velt initialization and setup
 │   ├── context/
-│   │   ├── PDFEditorContext.tsx # Global state for PDF editor
-│   │   └── ThemeContext.tsx     # Dark/Light mode state
+│   │   ├── PDFEditorContext.tsx     # Global state (zoom, page, file, user)
+│   │   └── ThemeContext.tsx         # Dark/Light mode state
 │   ├── data/
-│   │   └── data.ts              # Mock user data
-│   ├── globals.css              # Global styles
-│   ├── layout.tsx               # Root layout
-│   └── page.tsx                 # Entry point
-├── public/                      # Static assets (PDF files)
-
+│   │   └── data.ts                  # Mock user data
+│   ├── providers/
+│   │   └── VeltProviderWrapper.tsx  # Velt provider with user auth
+│   ├── globals.css                  # Global styles
+│   ├── layout.tsx                   # Root layout
+│   └── page.tsx                     # Entry point
+├── public/
+│   └── research_paper.pdf           # Sample PDF document
+└── .env.example                     # Environment variable template
 ```
 
 ## 🔗 Velt Integration
@@ -110,40 +110,59 @@ This project demonstrates Velt's integration for adding collaborative features t
 | Component               | Purpose                                                    |
 | ----------------------- | ---------------------------------------------------------- |
 | `VeltProvider`          | Main provider wrapping the app for Velt SDK initialization |
-| `VeltComments`          | Component handling the comment threads and rendering       |
+| `VeltComments`          | Inline text-mode comment overlay on the PDF                |
 | `VeltCommentsSidebar`   | Sidebar panel showing all comments in a list view          |
 | `VeltSidebarButton`     | Toggle button to open/close the comments sidebar           |
-| `VeltCommentTool`       | Trigger for adding new comments                            |
 | `VeltPresence`          | Displays active users viewing the document                 |
 | `VeltNotificationsTool` | Shows notification bell with comment updates               |
 
+### Velt Hooks Used
+
+| Hook                    | Purpose                                     |
+| ----------------------- | ------------------------------------------- |
+| `useVeltClient`         | Access to Velt client for document/location |
+| `useCommentAnnotations` | Retrieve and manage comment annotations     |
+
 ### Integration Logic
 
-The setup is primarily handled in `app/components/VeltCommentSetup.tsx` and `app/components/Navbar.tsx`.
+Setup handled in `app/providers/VeltProviderWrapper.tsx` and `app/components/PDFEditor.tsx`:
 
 ```typescript
-// Example initialization
-const { client } = useVeltClient();
+// VeltProviderWrapper.tsx - User authentication
+<VeltProvider
+  apiKey={process.env.NEXT_PUBLIC_VELT_API_KEY}
+  authProvider={{
+    user: currentUser,
+    retryConfig: { retryCount: 3, retryDelay: 1000 },
+  }}
+>
+  {children}
+</VeltProvider>
 
+// PDFEditor.tsx - Document & location setup
 useEffect(() => {
-  if (client) {
-    client.setDocuments([
-      {
-        id: "unique-document-id",
-        metadata: { documentName: "Sample PDF" },
-      },
-    ]);
+  if (client && pdfFile) {
+    client.setDocuments([{
+      id: documentName,
+      metadata: { documentName, type: "pdf" },
+    }]);
+    client.setLocation({
+      id: `page-${pageNumber}`,
+      locationName: `Page ${pageNumber}`,
+    });
   }
-}, [client]);
+}, [client, pdfFile, documentName, pageNumber]);
 ```
 
 ## 🎯 How to Use
 
-1.  **Switch Users**: Click the user avatar in the top right to switch between different mock users.
-2.  **Add Comments**: Click the **Comment** tool in the left toolbar (or the speech bubble button) and click anywhere on the PDF to leave a comment.
+1.  **Switch Users**: Click the user avatar in the top right to switch between mock users, or use `?user=0` / `?user=1` URL params.
+2.  **Add Comments**: Select text on the PDF or use the Comment tool to add inline comments.
 3.  **View Sidebar**: Click the sidebar icon in the navbar to toggle the comments panel.
 4.  **Toggle Theme**: Use the Moon/Sun icon in the navbar to switch between light and dark modes.
-5.  **Use Tools**: Select the "Draw" tool to annotate freehand, or "Image" to upload overlays.
+5.  **Navigate Pages**: Use the arrow buttons in the toolbar to navigate between PDF pages.
+6.  **Zoom**: Use the zoom in/out buttons to adjust the PDF view scale.
+7.  **Download**: Click the Download button to save the PDF locally.
 
 ## 📚 Documentation & Resources
 

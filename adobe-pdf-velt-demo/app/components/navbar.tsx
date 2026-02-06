@@ -8,6 +8,7 @@ import {
   VeltSidebarButton,
   VeltNotificationsTool,
   VeltCommentsSidebar,
+  VeltPresence,
 } from "@veltdev/react";
 import { useTheme } from "../context/ThemeContext";
 import { usePDFEditor } from "../context/PDFEditorContext";
@@ -132,25 +133,12 @@ export function Navbar() {
             onClick={() => setShowUserMenu(!showUserMenu)}
             className="flex items-center gap-2 p-1 rounded hover:bg-gray-100 dark:hover:bg-[#404040] transition-colors"
           >
-            <img
-              src={currentUser.photoUrl}
-              alt={currentUser.name}
-              className="w-8 h-8 rounded-full border-2"
-              style={{ borderColor: currentUser.color }}
-            />
+            <VeltPresence maxUsers={1} />
           </button>
 
           {showUserMenu && (
             <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-[#2c2c2c] border border-gray-200 dark:border-[#404040] rounded-lg shadow-xl overflow-hidden z-50">
-              <div className="p-3 border-b border-gray-200 dark:border-[#404040]">
-                <p className="text-xs text-gray-500 uppercase">Current User</p>
-                <p className="text-gray-900 dark:text-white font-medium">
-                  {currentUser.name}
-                </p>
-                <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  {currentUser.email}
-                </p>
-              </div>
+              
               <div className="p-2">
                 <p className="text-xs text-gray-500 uppercase px-2 py-1">
                   Switch User
@@ -202,7 +190,7 @@ export function Navbar() {
             }}
           />
           <VeltCommentsSidebar darkMode={theme === "dark"} />
-          <VeltNotificationsTool />
+          <VeltNotificationsTool darkMode={theme === "dark"} />
         </div>
       </div>
     </nav>
