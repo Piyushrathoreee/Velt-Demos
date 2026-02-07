@@ -2,13 +2,14 @@
 
 A PDF Editor-inspired document collaboration app built with Next.js, React-PDF, and Velt, demonstrating real-time inline commenting and multi-user collaboration features on PDF documents.
 
+check it out -> https://velt-pdf-editor.vercel.app/
 ## 🛠 Tech Stack
 
 | Category             | Technology                            |
 | -------------------- | ------------------------------------- |
 | **Framework**        | Next.js 16+ (App Router) + TypeScript |
 | **PDF Engine**       | react-pdf v10.3.0                     |
-| **Collaboration**    | Velt SDK v5.0.0-beta.11               |
+| **Collaboration**    | Velt SDK (Text mode)              |
 | **Styling**          | Tailwind CSS v4                       |
 | **Icons**            | Lucide React                          |
 | **State Management** | React Context API                     |

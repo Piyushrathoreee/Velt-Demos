@@ -126,7 +126,7 @@ export default function PDFEditor() {
             >
               <Page
                 pageNumber={pageNumber}
-                scale={zoom || 1}
+                scale={1.4 * zoom}
                 renderTextLayer={true}
                 renderAnnotationLayer={true}
                 className="pdf-page bg-white"
