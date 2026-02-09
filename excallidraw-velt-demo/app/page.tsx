@@ -18,7 +18,7 @@ type Tool =
 
 type ShapeType = "line" | "arrow" | "rect" | "ellipse" | "diamond";
 type FillableShapeType = "rect" | "ellipse" | "diamond";
-type DrawableType = ShapeType | "pen";
+type DrawableType = ShapeType | "pen" | "text";
 
 interface BaseElement {
   id: string;
@@ -41,7 +41,29 @@ interface PenElement extends BaseElement {
   points: StrokePoint[];
 }
 
-type DrawingElement = ShapeElement | PenElement;
+interface TextElement extends BaseElement {
+  type: "text";
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  text: string;
+}
+
+interface ActiveTextEditor {
+  x: number;
+  y: number;
+  screenX: number;
+  screenY: number;
+  elementId?: string;
+  width?: number;
+  height?: number;
+  text: string;
+  color: string;
+  thickness: number;
+}
+
+type DrawingElement = ShapeElement | PenElement | TextElement;
 
 type PointerMode = "drawing" | "panning" | "moving" | "resizing" | "erasing";
 type ResizeHandle =
@@ -82,6 +104,7 @@ const TOOLBAR_TOOLS: Array<{ id: Tool; label: string }> = [
   { id: "rect", label: "Rectangle" },
   { id: "ellipse", label: "Ellipse" },
   { id: "diamond", label: "Diamond" },
+  { id: "text", label: "Text" },
 ];
 
 const COLOR_PALETTE = [
@@ -96,8 +119,11 @@ const COLOR_PALETTE = [
 ];
 
 const FILL_ALPHA = 0.2;
-const RESIZE_HANDLE_RADIUS = 4.5;
 const RESIZE_HANDLE_HIT_RADIUS = 10;
+const TEXT_PADDING_X = 6;
+const TEXT_PADDING_Y = 4;
+const TEXT_FONT_RATIO = 0.82;
+const TEXT_FONT_FAMILY = `"Comic Sans MS", "Segoe Print", "Bradley Hand", cursive`;
 
 const distance = (a: Point, b: Point): number => {
   const dx = a.x - b.x;
@@ -142,6 +168,25 @@ const toFillColor = (hexColor: string, alpha: number): string => {
   const green = Number.parseInt(expanded.slice(2, 4), 16);
   const blue = Number.parseInt(expanded.slice(4, 6), 16);
   return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+};
+
+const splitTextLines = (text: string): string[] => {
+  return text.replace(/\r\n/g, "\n").split("\n");
+};
+
+const getTextBaseSize = (thickness: number): number => {
+  return clamp(14 + thickness * 2, 14, 42);
+};
+
+const estimateTextBounds = (text: string, thickness: number): { width: number; height: number } => {
+  const lines = splitTextLines(text);
+  const maxChars = lines.reduce((max, line) => Math.max(max, line.length), 1);
+  const baseSize = getTextBaseSize(thickness);
+  const lineHeight = baseSize * 1.28;
+  return {
+    width: Math.max(baseSize * 1.2, maxChars * baseSize * 0.62) + TEXT_PADDING_X * 2,
+    height: Math.max(lineHeight, lines.length * lineHeight) + TEXT_PADDING_Y * 2,
+  };
 };
 
 const toStrokePoint = (
@@ -207,7 +252,7 @@ const distanceToSegment = (p: Point, a: Point, b: Point): number => {
   return distance(p, projection);
 };
 
-const normalizeRect = (el: ShapeElement) => {
+const normalizeRect = (el: { x1: number; y1: number; x2: number; y2: number }) => {
   const minX = Math.min(el.x1, el.x2);
   const minY = Math.min(el.y1, el.y2);
   const maxX = Math.max(el.x1, el.x2);
@@ -243,39 +288,101 @@ const getElementBounds = (el: DrawingElement) => {
   return { minX, minY, maxX, maxY };
 };
 
-const getResizeHandleDescriptors = (el: DrawingElement): ResizeHandleDescriptor[] => {
-  if (el.type === "line" || el.type === "arrow") {
-    return [
-      { id: "start", point: { x: el.x1, y: el.y1 }, cursorClass: "cursor-move" },
-      { id: "end", point: { x: el.x2, y: el.y2 }, cursorClass: "cursor-move" },
-    ];
-  }
-
-  const { minX, minY, maxX, maxY } = getElementBounds(el);
-  const midX = (minX + maxX) * 0.5;
-  const midY = (minY + maxY) * 0.5;
-  return [
-    { id: "nw", point: { x: minX, y: minY }, cursorClass: "cursor-nwse-resize" },
-    { id: "n", point: { x: midX, y: minY }, cursorClass: "cursor-ns-resize" },
-    { id: "ne", point: { x: maxX, y: minY }, cursorClass: "cursor-nesw-resize" },
-    { id: "e", point: { x: maxX, y: midY }, cursorClass: "cursor-ew-resize" },
-    { id: "se", point: { x: maxX, y: maxY }, cursorClass: "cursor-nwse-resize" },
-    { id: "s", point: { x: midX, y: maxY }, cursorClass: "cursor-ns-resize" },
-    { id: "sw", point: { x: minX, y: maxY }, cursorClass: "cursor-nesw-resize" },
-    { id: "w", point: { x: minX, y: midY }, cursorClass: "cursor-ew-resize" },
-  ];
-};
-
 const getResizeHandleAtPoint = (
   point: Point,
   el: DrawingElement,
 ): ResizeHandleDescriptor | null => {
-  const handles = getResizeHandleDescriptors(el);
-  for (let i = handles.length - 1; i >= 0; i -= 1) {
-    const handle = handles[i];
-    if (distance(point, handle.point) <= RESIZE_HANDLE_HIT_RADIUS) {
-      return handle;
+  if (el.type === "line" || el.type === "arrow") {
+    if (!isPointNearElement(point, el, RESIZE_HANDLE_HIT_RADIUS)) {
+      return null;
     }
+
+    const startPoint = { x: el.x1, y: el.y1 };
+    const endPoint = { x: el.x2, y: el.y2 };
+    const startDistance = distance(point, startPoint);
+    const endDistance = distance(point, endPoint);
+    const nearest =
+      startDistance <= endDistance
+        ? { id: "start" as const, point: startPoint }
+        : { id: "end" as const, point: endPoint };
+    return {
+      id: nearest.id,
+      point: nearest.point,
+      cursorClass: "cursor-move",
+    };
+  }
+
+  const { minX, minY, maxX, maxY } = getElementBounds(el);
+  const tolerance = RESIZE_HANDLE_HIT_RADIUS;
+  const nearLeft = Math.abs(point.x - minX) <= tolerance;
+  const nearRight = Math.abs(point.x - maxX) <= tolerance;
+  const nearTop = Math.abs(point.y - minY) <= tolerance;
+  const nearBottom = Math.abs(point.y - maxY) <= tolerance;
+  const withinVertical = point.y >= minY - tolerance && point.y <= maxY + tolerance;
+  const withinHorizontal = point.x >= minX - tolerance && point.x <= maxX + tolerance;
+
+  if (nearTop && nearLeft) {
+    return {
+      id: "nw",
+      point: { x: minX, y: minY },
+      cursorClass: "cursor-nwse-resize",
+    };
+  }
+
+  if (nearTop && nearRight) {
+    return {
+      id: "ne",
+      point: { x: maxX, y: minY },
+      cursorClass: "cursor-nesw-resize",
+    };
+  }
+
+  if (nearBottom && nearRight) {
+    return {
+      id: "se",
+      point: { x: maxX, y: maxY },
+      cursorClass: "cursor-nwse-resize",
+    };
+  }
+
+  if (nearBottom && nearLeft) {
+    return {
+      id: "sw",
+      point: { x: minX, y: maxY },
+      cursorClass: "cursor-nesw-resize",
+    };
+  }
+
+  if (nearTop && withinHorizontal) {
+    return {
+      id: "n",
+      point: { x: (minX + maxX) * 0.5, y: minY },
+      cursorClass: "cursor-ns-resize",
+    };
+  }
+
+  if (nearBottom && withinHorizontal) {
+    return {
+      id: "s",
+      point: { x: (minX + maxX) * 0.5, y: maxY },
+      cursorClass: "cursor-ns-resize",
+    };
+  }
+
+  if (nearRight && withinVertical) {
+    return {
+      id: "e",
+      point: { x: maxX, y: (minY + maxY) * 0.5 },
+      cursorClass: "cursor-ew-resize",
+    };
+  }
+
+  if (nearLeft && withinVertical) {
+    return {
+      id: "w",
+      point: { x: minX, y: (minY + maxY) * 0.5 },
+      cursorClass: "cursor-ew-resize",
+    };
   }
 
   return null;
@@ -413,6 +520,16 @@ const isPointNearElement = (
   tolerance = 8,
 ): boolean => {
   const threshold = Math.max(tolerance, el.thickness * 1.5);
+
+  if (el.type === "text") {
+    const { minX, minY, maxX, maxY } = normalizeRect(el);
+    return (
+      point.x >= minX - threshold &&
+      point.x <= maxX + threshold &&
+      point.y >= minY - threshold &&
+      point.y <= maxY + threshold
+    );
+  }
 
   if (el.type === "line" || el.type === "arrow") {
     return (
@@ -579,10 +696,47 @@ const drawShape = (ctx: CanvasRenderingContext2D, el: ShapeElement): void => {
   ctx.stroke();
 };
 
+const drawTextElement = (ctx: CanvasRenderingContext2D, el: TextElement): void => {
+  const { minX, minY, width, height } = normalizeRect(el);
+  if (width < 2 || height < 2) {
+    return;
+  }
+
+  const lines = splitTextLines(el.text);
+  const lineCount = Math.max(1, lines.length);
+  const contentWidth = Math.max(1, width - TEXT_PADDING_X * 2);
+  const contentHeight = Math.max(1, height - TEXT_PADDING_Y * 2);
+  const lineHeight = contentHeight / lineCount;
+  const fontSize = Math.max(10, lineHeight * TEXT_FONT_RATIO);
+
+  ctx.save();
+  ctx.fillStyle = el.color;
+  ctx.font = `${fontSize}px ${TEXT_FONT_FAMILY}`;
+  ctx.textBaseline = "top";
+
+  for (let i = 0; i < lineCount; i += 1) {
+    const line = lines[i] ?? "";
+    const measuredWidth = Math.max(1, ctx.measureText(line || " ").width);
+    const horizontalScale = Math.min(1, contentWidth / measuredWidth);
+    ctx.save();
+    ctx.translate(minX + TEXT_PADDING_X, minY + TEXT_PADDING_Y + i * lineHeight);
+    ctx.scale(horizontalScale, 1);
+    ctx.fillText(line, 0, 0);
+    ctx.restore();
+  }
+
+  ctx.restore();
+};
+
 const drawElement = (ctx: CanvasRenderingContext2D, el: DrawingElement): void => {
   ctx.strokeStyle = el.color;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
+
+  if (el.type === "text") {
+    drawTextElement(ctx, el);
+    return;
+  }
 
   if (el.type === "pen") {
     if (el.points.length === 0) {
@@ -653,16 +807,38 @@ const buildId = (): string => {
   return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
+const buildTextElement = (
+  position: Point,
+  text: string,
+  color: string,
+  thickness: number,
+): TextElement => {
+  const { width, height } = estimateTextBounds(text, thickness);
+  return {
+    id: buildId(),
+    type: "text",
+    color,
+    thickness,
+    text,
+    x1: position.x,
+    y1: position.y,
+    x2: position.x + width,
+    y2: position.y + height,
+  };
+};
+
 const minDrawableSize = 2;
 
 export default function Home() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const textInputRef = useRef<HTMLTextAreaElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const panRef = useRef<Point>({ x: 0, y: 0 });
   const elementsRef = useRef<DrawingElement[]>([]);
   const draftRef = useRef<DrawingElement | null>(null);
   const pointerStateRef = useRef<PointerState | null>(null);
   const selectedIdRef = useRef<string | null>(null);
+  const textEditorRef = useRef<ActiveTextEditor | null>(null);
 
   const [tool, setTool] = useState<Tool>("select");
   const [color, setColor] = useState<string>(COLOR_PALETTE[0]);
@@ -670,10 +846,15 @@ export default function Home() {
   const [fillDropperActive, setFillDropperActive] = useState<boolean>(false);
   const [hoverCursorClass, setHoverCursorClass] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [textEditor, setTextEditor] = useState<ActiveTextEditor | null>(null);
 
   useEffect(() => {
     selectedIdRef.current = selectedId;
   }, [selectedId]);
+
+  useEffect(() => {
+    textEditorRef.current = textEditor;
+  }, [textEditor]);
 
   const scheduleDraw = useCallback(() => {
     if (rafRef.current !== null) {
@@ -728,8 +909,12 @@ export default function Home() {
 
       ctx.save();
       ctx.translate(pan.x, pan.y);
+      const editingElementId = textEditorRef.current?.elementId ?? null;
 
       for (const el of elementsRef.current) {
+        if (editingElementId && el.id === editingElementId) {
+          continue;
+        }
         drawElement(ctx, el);
       }
 
@@ -742,39 +927,13 @@ export default function Home() {
           (el) => el.id === selectedIdRef.current,
         );
 
-        if (selectedElement) {
+        if (selectedElement && selectedElement.id !== editingElementId) {
           const { minX, minY, maxX, maxY } = getElementBounds(selectedElement);
           ctx.setLineDash([6, 4]);
           ctx.strokeStyle = "#2563eb";
           ctx.lineWidth = 1;
           ctx.strokeRect(minX - 6, minY - 6, maxX - minX + 12, maxY - minY + 12);
           ctx.setLineDash([]);
-
-          for (const handle of getResizeHandleDescriptors(selectedElement)) {
-            ctx.beginPath();
-            if (handle.id === "start" || handle.id === "end") {
-              ctx.arc(
-                handle.point.x,
-                handle.point.y,
-                RESIZE_HANDLE_RADIUS + 0.8,
-                0,
-                Math.PI * 2,
-              );
-            } else {
-              ctx.rect(
-                handle.point.x - RESIZE_HANDLE_RADIUS,
-                handle.point.y - RESIZE_HANDLE_RADIUS,
-                RESIZE_HANDLE_RADIUS * 2,
-                RESIZE_HANDLE_RADIUS * 2,
-              );
-            }
-
-            ctx.fillStyle = "#ffffff";
-            ctx.strokeStyle = "#2563eb";
-            ctx.lineWidth = 1.2;
-            ctx.fill();
-            ctx.stroke();
-          }
         }
       }
 
@@ -833,6 +992,44 @@ export default function Home() {
     return null;
   }, []);
 
+  const startTextEditor = useCallback((nextEditor: ActiveTextEditor) => {
+    setTextEditor(nextEditor);
+    window.requestAnimationFrame(() => {
+      const input = textInputRef.current;
+      if (!input) {
+        return;
+      }
+
+      input.focus();
+      const length = input.value.length;
+      input.setSelectionRange(length, length);
+    });
+  }, []);
+
+  const openTextEditorForElement = useCallback(
+    (el: TextElement) => {
+      const { minX, minY, width, height } = normalizeRect(el);
+      const pan = panRef.current;
+      startTextEditor({
+        x: minX,
+        y: minY,
+        screenX: minX + pan.x,
+        screenY: minY + pan.y,
+        elementId: el.id,
+        width,
+        height,
+        text: el.text,
+        color: el.color,
+        thickness: el.thickness,
+      });
+      selectedIdRef.current = el.id;
+      setSelectedId(el.id);
+      setHoverCursorClass(null);
+      setFillDropperActive(false);
+    },
+    [startTextEditor],
+  );
+
   const eraseAtPoint = useCallback(
     (point: Point) => {
       const index = [...elementsRef.current]
@@ -856,19 +1053,162 @@ export default function Home() {
     [setSelectedId],
   );
 
+  const commitTextEditor = useCallback(
+    (switchToSelect = false) => {
+      const activeEditor = textEditorRef.current;
+      if (!activeEditor) {
+        if (switchToSelect) {
+          setTool("select");
+          setHoverCursorClass(null);
+        }
+        return;
+      }
+
+      const normalizedText = activeEditor.text.replace(/\r\n/g, "\n");
+      const hasText = normalizedText.trim().length > 0;
+
+      if (activeEditor.elementId) {
+        const existingElement = elementsRef.current.find(
+          (el) => el.id === activeEditor.elementId,
+        );
+
+        if (existingElement?.type === "text") {
+          if (!hasText) {
+            elementsRef.current = elementsRef.current.filter((el) => el.id !== activeEditor.elementId);
+            if (selectedIdRef.current === activeEditor.elementId) {
+              selectedIdRef.current = null;
+              setSelectedId(null);
+            }
+          } else {
+            const nextWidth = activeEditor.width ?? Math.abs(existingElement.x2 - existingElement.x1);
+            const nextHeight = activeEditor.height ?? Math.abs(existingElement.y2 - existingElement.y1);
+
+            elementsRef.current = elementsRef.current.map((el) => {
+              if (el.id !== activeEditor.elementId || el.type !== "text") {
+                return el;
+              }
+
+              return {
+                ...el,
+                text: normalizedText,
+                color: activeEditor.color,
+                thickness: activeEditor.thickness,
+                x1: activeEditor.x,
+                y1: activeEditor.y,
+                x2: activeEditor.x + nextWidth,
+                y2: activeEditor.y + nextHeight,
+              };
+            });
+            selectedIdRef.current = activeEditor.elementId;
+            setSelectedId(activeEditor.elementId);
+          }
+        }
+      } else if (hasText) {
+        const textElement = buildTextElement(
+          { x: activeEditor.x, y: activeEditor.y },
+          normalizedText,
+          activeEditor.color,
+          activeEditor.thickness,
+        );
+        elementsRef.current = [...elementsRef.current, textElement];
+        selectedIdRef.current = textElement.id;
+        setSelectedId(textElement.id);
+      }
+
+      setTextEditor(null);
+      if (switchToSelect) {
+        setTool("select");
+        setHoverCursorClass(null);
+      }
+      scheduleDraw();
+    },
+    [scheduleDraw],
+  );
+
+  const cancelTextEditor = useCallback(
+    (switchToSelect = false) => {
+      if (!textEditorRef.current) {
+        if (switchToSelect) {
+          setTool("select");
+          setHoverCursorClass(null);
+        }
+        return;
+      }
+
+      setTextEditor(null);
+      if (switchToSelect) {
+        setTool("select");
+        setHoverCursorClass(null);
+      }
+      scheduleDraw();
+    },
+    [scheduleDraw],
+  );
+
   const toggleFill = useCallback(() => {
+    commitTextEditor(false);
     setTool("select");
     setHoverCursorClass(null);
     setFillDropperActive((prev) => !prev);
-  }, []);
+  }, [commitTextEditor]);
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLCanvasElement>) => {
       event.preventDefault();
       const canvas = event.currentTarget;
-      canvas.setPointerCapture(event.pointerId);
-
       const { world, screen } = getPoints(event);
+
+      if (textEditorRef.current && tool !== "text") {
+        commitTextEditor(false);
+      }
+
+      if (fillDropperActive) {
+        const target = getElementAtPoint(world);
+        if (target && isFillableShape(target)) {
+          const fillColor = toFillColor(color, FILL_ALPHA);
+          elementsRef.current = elementsRef.current.map((el) => {
+            if (el.id === target.id && isFillableShape(el)) {
+              return { ...el, fill: fillColor };
+            }
+            return el;
+          });
+          selectedIdRef.current = target.id;
+          setSelectedId(target.id);
+          setFillDropperActive(false);
+          scheduleDraw();
+        }
+
+        return;
+      }
+
+      if (tool === "text") {
+        commitTextEditor(false);
+        pointerStateRef.current = null;
+        setHoverCursorClass(null);
+        setFillDropperActive(false);
+
+        const target = getElementAtPoint(world);
+        if (target?.type === "text") {
+          openTextEditorForElement(target);
+          scheduleDraw();
+          return;
+        }
+
+        selectedIdRef.current = null;
+        setSelectedId(null);
+        startTextEditor({
+          x: world.x,
+          y: world.y,
+          screenX: screen.x,
+          screenY: screen.y,
+          text: "",
+          color,
+          thickness,
+        });
+        return;
+      }
+
+      canvas.setPointerCapture(event.pointerId);
 
       if (tool === "hand") {
         pointerStateRef.current = {
@@ -890,24 +1230,6 @@ export default function Home() {
         };
         scheduleDraw();
         return;
-      }
-
-      if (fillDropperActive) {
-        const target = getElementAtPoint(world);
-        if (target && isFillableShape(target)) {
-          const fillColor = toFillColor(color, FILL_ALPHA);
-          elementsRef.current = elementsRef.current.map((el) => {
-            if (el.id === target.id && isFillableShape(el)) {
-              return { ...el, fill: fillColor };
-            }
-            return el;
-          });
-          selectedIdRef.current = target.id;
-          setSelectedId(target.id);
-          setFillDropperActive(false);
-          scheduleDraw();
-          return;
-        }
       }
 
       if (tool === "select") {
@@ -995,14 +1317,42 @@ export default function Home() {
     },
     [
       color,
+      commitTextEditor,
       eraseAtPoint,
       fillDropperActive,
       getElementAtPoint,
       getPoints,
+      openTextEditorForElement,
       scheduleDraw,
+      startTextEditor,
       thickness,
       tool,
     ],
+  );
+
+  const handleDoubleClick = useCallback(
+    (event: React.MouseEvent<HTMLCanvasElement>) => {
+      if (fillDropperActive) {
+        return;
+      }
+
+      const rect = event.currentTarget.getBoundingClientRect();
+      const world = {
+        x: event.clientX - rect.left - panRef.current.x,
+        y: event.clientY - rect.top - panRef.current.y,
+      };
+      const target = getElementAtPoint(world);
+      if (target?.type !== "text") {
+        return;
+      }
+
+      event.preventDefault();
+      commitTextEditor(false);
+      pointerStateRef.current = null;
+      openTextEditorForElement(target);
+      scheduleDraw();
+    },
+    [commitTextEditor, fillDropperActive, getElementAtPoint, openTextEditorForElement, scheduleDraw],
   );
 
   const handlePointerMove = useCallback(
@@ -1188,6 +1538,7 @@ export default function Home() {
     draftRef.current = null;
     pointerStateRef.current = null;
     selectedIdRef.current = null;
+    setTextEditor(null);
     setFillDropperActive(false);
     setHoverCursorClass(null);
     setSelectedId(null);
@@ -1201,9 +1552,27 @@ export default function Home() {
         ? "cursor-cell"
       : tool === "select"
         ? hoverCursorClass ?? "cursor-default"
+      : tool === "text"
+        ? "cursor-text"
       : tool === "eraser"
           ? "cursor-cell"
           : "cursor-crosshair";
+  const textEditorLines = textEditor ? splitTextLines(textEditor.text) : [];
+  const textEditorMaxChars = textEditor
+    ? textEditorLines.reduce((max, line) => Math.max(max, line.length), 1)
+    : 1;
+  const textEditorFontSize = textEditor ? getTextBaseSize(textEditor.thickness) : 16;
+  const textEditorLineHeight = textEditorFontSize * 1.28;
+  const autoTextEditorWidth = Math.max(
+    140,
+    textEditorMaxChars * textEditorFontSize * 0.62 + TEXT_PADDING_X * 2 + 8,
+  );
+  const autoTextEditorHeight = Math.max(
+    textEditorLineHeight + TEXT_PADDING_Y * 2,
+    Math.max(1, textEditorLines.length) * textEditorLineHeight + TEXT_PADDING_Y * 2 + 4,
+  );
+  const textEditorWidth = textEditor?.width ?? autoTextEditorWidth;
+  const textEditorHeight = textEditor?.height ?? autoTextEditorHeight;
 
   return (
     <main className="relative h-screen w-screen overflow-hidden bg-slate-100 text-slate-900">
@@ -1222,6 +1591,9 @@ export default function Home() {
                   : "text-slate-700 hover:bg-white"
               }`}
               onClick={() => {
+                if (item.id !== "text") {
+                  commitTextEditor(false);
+                }
                 setTool(item.id);
                 setFillDropperActive(false);
                 setHoverCursorClass(null);
@@ -1245,7 +1617,17 @@ export default function Home() {
               style={{ background: swatch }}
               aria-label={`Set color ${swatch}`}
               aria-pressed={color === swatch}
-              onClick={() => setColor(swatch)}
+              onClick={() => {
+                setColor(swatch);
+                setTextEditor((current) =>
+                  current
+                    ? {
+                        ...current,
+                        color: swatch,
+                      }
+                    : current,
+                );
+              }}
             />
           ))}
         </div>
@@ -1276,7 +1658,18 @@ export default function Home() {
             max={16}
             value={thickness}
             className="w-28 accent-slate-800 sm:w-36"
-            onChange={(event) => setThickness(Number(event.target.value))}
+            onChange={(event) => {
+              const nextThickness = Number(event.target.value);
+              setThickness(nextThickness);
+              setTextEditor((current) =>
+                current
+                  ? {
+                      ...current,
+                      thickness: nextThickness,
+                    }
+                  : current,
+              );
+            }}
           />
           <span className="w-10 text-right text-xs font-semibold text-slate-700">
             {thickness}px
@@ -1300,6 +1693,50 @@ export default function Home() {
         </div>
       </section>
 
+      {textEditor ? (
+        <textarea
+          ref={textInputRef}
+          value={textEditor.text}
+          spellCheck={false}
+          rows={Math.max(1, textEditorLines.length)}
+          className="absolute z-30 resize-none bg-transparent px-0 py-0 leading-tight outline-none"
+          style={{
+            left: textEditor.screenX,
+            top: textEditor.screenY,
+            width: textEditorWidth,
+            height: textEditorHeight,
+            color: textEditor.color,
+            fontSize: `${textEditorFontSize}px`,
+            fontFamily: TEXT_FONT_FAMILY,
+          }}
+          onChange={(event) =>
+            setTextEditor((current) =>
+              current
+                ? {
+                    ...current,
+                    text: event.target.value,
+                  }
+                : current,
+            )
+          }
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              commitTextEditor(true);
+              return;
+            }
+
+            if (event.key === "Escape") {
+              event.preventDefault();
+              cancelTextEditor(true);
+            }
+          }}
+          onBlur={() => {
+            commitTextEditor(false);
+          }}
+        />
+      ) : null}
+
       <canvas
         ref={canvasRef}
         className={`block h-full w-full touch-none ${canvasCursorClass}`}
@@ -1307,6 +1744,7 @@ export default function Home() {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerCancel={handlePointerUp}
+        onDoubleClick={handleDoubleClick}
       />
     </main>
   );
