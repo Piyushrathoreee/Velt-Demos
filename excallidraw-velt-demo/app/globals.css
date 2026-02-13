@@ -110,3 +110,12 @@ html.dark .sidebar-separator {
 html.dark .sidebar-section-label {
   color: #a3a3a3;
 }
+
+html.dark {
+  /* Velt Huddle Dark Mode Overrides */
+  --velt-huddle-panel-background: #171717;
+  --velt-huddle-panel-border-color: #262626;
+  --velt-huddle-icon-color: #a3a3a3;
+  --velt-huddle-icon-color-active: #fff;
+  --velt-huddle-panel-shadow: none;
+}

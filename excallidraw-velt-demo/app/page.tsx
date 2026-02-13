@@ -93,7 +93,10 @@ const DARK_CANVAS_INK = "#111827";
 const LIGHT_CANVAS_INK = "#ffffff";
 
 const normalizeHexColor = (value: string): string | null => {
-  const match = value.trim().toLowerCase().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/);
+  const match = value
+    .trim()
+    .toLowerCase()
+    .match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/);
   if (!match) {
     return null;
   }
@@ -187,7 +190,9 @@ const getThemeAwareCanvasColor = (color: string, isDark: boolean): string => {
   const isLightInkRgb = rgb.r === 255 && rgb.g === 255 && rgb.b === 255;
 
   if (isDark && isDarkInkRgb) {
-    return rgb.a === undefined ? LIGHT_CANVAS_INK : `rgba(255, 255, 255, ${rgb.a})`;
+    return rgb.a === undefined
+      ? LIGHT_CANVAS_INK
+      : `rgba(255, 255, 255, ${rgb.a})`;
   }
 
   if (!isDark && isLightInkRgb) {
@@ -1917,7 +1922,7 @@ function WhiteboardCanvas() {
       style={{ background: canvasBg }}
     >
       <section
-        className="absolute left-1/2 top-3 z-20 -translate-x-1/2 flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white p-1 shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
+        className="absolute left-1/2 top-3 z-20 -translate-x-1/2 flex items-center gap-0.5 rounded-lg border border-slate-200 bg-white px-1 py-1.5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900"
         aria-label="Drawing tools"
       >
         {TOOLBAR_TOOLS.map((item) => (
@@ -1925,7 +1930,7 @@ function WhiteboardCanvas() {
             key={item.id}
             type="button"
             title={item.label}
-            className={`flex h-8 w-8 mx-1 items-center justify-center rounded-md transition ${
+            className={`flex h-11 w-11 mx-px p-2 items-center justify-center rounded-full transition ${
               tool === item.id
                 ? "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300"
                 : "text-slate-600 hover:bg-slate-100 dark:text-neutral-400 dark:hover:bg-neutral-800"
@@ -1964,8 +1969,6 @@ function WhiteboardCanvas() {
 
       {((tool !== "select" && tool !== "hand") || selectedId) && (
         <aside className="absolute left-3 top-[72px] z-20 w-52 space-y-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:bg-neutral-900 dark:border-neutral-800">
-          
-
           <div>
             <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-neutral-500">
               Stroke
@@ -1975,8 +1978,8 @@ function WhiteboardCanvas() {
                 <button
                   key={swatch}
                   type="button"
-                    className={`h-6 w-6 rounded border transition hover:scale-110 ${
-                      color === swatch
+                  className={`h-6 w-6 rounded border transition hover:scale-110 ${
+                    color === swatch
                       ? "border-indigo-500 ring-2 ring-indigo-200 dark:ring-indigo-500/30"
                       : "border-slate-200 dark:border-neutral-700"
                   }`}

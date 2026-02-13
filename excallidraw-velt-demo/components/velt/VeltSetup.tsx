@@ -28,12 +28,33 @@ function getOrCreateGuest() {
       localStorage.removeItem("excalidraw-guest-user");
     }
   }
+  const users = [
+    {
+      userId: "user1",
+      name: "User 1",
+      email: "user1@velt.dev",
+      photoUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=Felix",
+      color: "#F97316", // Orange
+    },
+    {
+      userId: "user2",
+      name: "User 2",
+      email: "user2@velt.dev",
+      photoUrl: "https://api.dicebear.com/9.x/avataaars/svg?seed=Aneka",
+      color: "#3B82F6", // Blue
+    },
+  ];
+
+  // Randomly select, but maybe we can cycle based on time or something to be deterministic for testing if needed
+  const randomUser = users[Math.floor(Math.random() * users.length)];
+
+  // The original code had `await client.identify(randomUser);tItem("excalidraw-guest-user", JSON.stringify(guest));`
+  // This seems to be a malformed snippet.
+  // Assuming the intent is to use one of these predefined users as the "guest"
+  // and store it, similar to the original guest generation logic.
   const guest = {
-    userId: crypto.randomUUID(),
-    name: `Guest-${Math.random().toString(36).slice(2, 6)}`,
-    email: `guest-${Date.now()}@demo.local`,
-    organizationId: "excalidraw-demo",
-    color: GUEST_COLORS[Math.floor(Math.random() * GUEST_COLORS.length)],
+    ...randomUser,
+    organizationId: "excalidraw-demo", // Keep organizationId from original guest logic
   };
   localStorage.setItem("excalidraw-guest-user", JSON.stringify(guest));
   return guest;
