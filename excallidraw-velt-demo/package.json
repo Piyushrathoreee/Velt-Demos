@@ -9,9 +9,17 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@veltdev/client": "^5.0.0",
+    "@veltdev/crdt": "^4.5.9-beta.2",
+    "@veltdev/crdt-react": "^4.5.9-beta.5",
+    "@veltdev/react": "^5.0.0",
+    "@veltdev/reactflow-crdt": "^4.5.9-beta.3",
+    "@xyflow/react": "^12.10.0",
+    "lucide-react": "^0.563.0",
     "next": "16.1.6",
     "react": "19.2.3",
-    "react-dom": "19.2.3"
+    "react-dom": "19.2.3",
+    "yjs": "^13.6.29"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
