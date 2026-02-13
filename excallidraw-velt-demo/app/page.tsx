@@ -1,6 +1,7 @@
 "use client";
 
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ProfileMenu } from "@/components/ProfileMenu";
 import {
   MousePointer2,
   Hand,
@@ -16,7 +17,9 @@ import {
   Plus,
   Minus,
   MessageSquarePlus,
+  Users,
 } from "lucide-react";
+import { TEST_USERS } from "@/lib/users";
 import React, {
   useCallback,
   useEffect,
@@ -1433,25 +1436,11 @@ function WhiteboardCanvas() {
 
   const handlePointerDown = useCallback(
     (event: React.PointerEvent<HTMLCanvasElement>) => {
-      event.preventDefault();
-      const canvas = event.currentTarget;
-
       if (commentMode) {
-        if (!client) return;
-        const rect = canvas.getBoundingClientRect();
-        const scale = zoom / 100;
-        const x = (event.clientX - rect.left) / scale - panRef.current.x;
-        const y = (event.clientY - rect.top) / scale - panRef.current.y;
-
-        client.getCommentElement().addManualComment({
-          context: {
-            x,
-            y,
-            canvasId: "whiteboard",
-          },
-        });
         return;
       }
+      event.preventDefault();
+      const canvas = event.currentTarget;
       const { world, screen } = getPoints(event);
 
       if (textEditorRef.current && tool !== "text") {
@@ -1962,7 +1951,9 @@ function WhiteboardCanvas() {
 
         <div className="mx-1 h-4 w-px bg-slate-200 dark:bg-neutral-800" />
 
-        <div className="flex items-center px-1">
+        <div className="flex items-center px-1 gap-2">
+          <ProfileMenu />
+          <div className="mx-1 h-4 w-px bg-slate-200 dark:bg-neutral-800" />
           <VeltPresence />
         </div>
       </div>
