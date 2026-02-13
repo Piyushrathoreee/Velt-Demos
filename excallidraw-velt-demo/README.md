@@ -1,4 +1,4 @@
-# Excalidraw with Velt Collaboration
+   # Excalidraw with Velt Collaboration
 
 A powerful whiteboard collaboration app built with Next.js, HTML5 Canvas, and Velt, demonstrating real-time drawing, shape manipulation, and multi-user collaboration features.
 
@@ -27,7 +27,7 @@ A powerful whiteboard collaboration app built with Next.js, HTML5 Canvas, and Ve
 
 - **Prompt**: I want to start the Velt integration. Review my project structure and use your Velt Agent Skills to plan the CRDT store implementation. 
 
-<img src="/screenshot.png" width="500" height="500">
+<img src="https://github.com/Studio1HQ/Velt-Demos/blob/main/excallidraw-velt-demo/public/ss.png" width="500" >
 
 ## ✨ Features
 
