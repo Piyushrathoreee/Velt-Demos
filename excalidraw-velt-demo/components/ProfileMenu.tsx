@@ -2,11 +2,10 @@
 
 import React, { useEffect, useState } from "react";
 import { ChevronDown, User, Check, LogOut, RefreshCwIcon } from "lucide-react";
-import { useVeltClient } from "@veltdev/react";
+// import { useVeltClient } from "@veltdev/react";
 import { TEST_USERS } from "@/lib/users";
 
 export function ProfileMenu() {
-  const { client } = useVeltClient();
   const [isOpen, setIsOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(TEST_USERS[0]); // Default to first user
 
@@ -26,12 +25,10 @@ export function ProfileMenu() {
     setCurrentUser(user);
     setIsOpen(false);
 
-    if (client) {
-      client.identify(user);
-      const url = new URL(window.location.href);
-      url.searchParams.set("user", index.toString());
-      window.history.pushState({}, "", url);
-    }
+    // Update URL and reload to ensure clean session isolation via VeltProvider authProvider
+    const url = new URL(window.location.href);
+    url.searchParams.set("user", index.toString());
+    window.location.href = url.toString();
   };
 
   return (
@@ -41,7 +38,7 @@ export function ProfileMenu() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 rounded-full  bg-white  p-2  transition hover:bg-slate-50 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800"
       >
-        <RefreshCwIcon size={16} className="text-black/90 dark:text-white/90"/>
+        <RefreshCwIcon size={16} className="text-black/90 dark:text-white/90" />
       </button>
 
       {isOpen && (
