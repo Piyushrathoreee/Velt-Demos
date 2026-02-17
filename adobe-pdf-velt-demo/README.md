@@ -1,4 +1,4 @@
-# Adobe PDF Editor Clone with Velt Collaboration
+# PDF Reviewer with Velt Collaboration
 
 A PDF Editor-inspired document collaboration app built with Next.js, React-PDF, and Velt, demonstrating real-time inline commenting and multi-user collaboration features on PDF documents.
 
