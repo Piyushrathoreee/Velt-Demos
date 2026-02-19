@@ -42,3 +42,8 @@ body {
 .velt-tool--action-btn {
   color: #374151 !important;
 }
+
+snippyly-comment-text.comment-text-highlight {
+  background-color: rgba(255, 205, 46, 0.2) !important;
+  color: rgba(0, 0, 0, 1) !important;
+}
