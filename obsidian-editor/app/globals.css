@@ -1,0 +1,145 @@
+@import 'tailwindcss';
+
+* {
+  @apply box-border;
+}
+
+html, body {
+  @apply m-0 p-0 w-full h-full overflow-hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+body {
+  @apply bg-white dark:bg-[#121212] text-[#333] dark:text-[#dcddde];
+}
+
+::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-[#f0f0f0] dark:bg-[#1a1a1a];
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-[#d0d0d0] dark:bg-[#404040] rounded hover:bg-[#c0c0c0] dark:hover:bg-[#4f4f4f];
+}
+
+/* TipTap Editor Styling */
+.ProseMirror {
+  @apply px-6 py-4 h-full w-full focus:outline-none text-[#333] dark:text-[#dcddde];
+}
+
+.ProseMirror p {
+  @apply text-[#333] dark:text-[#dcddde] text-base leading-relaxed mb-2;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  @apply text-[#999] dark:text-[#666] pointer-events-none float-left h-0 content-['Start_typing...'];
+}
+
+.ProseMirror h1 {
+  @apply text-3xl font-bold text-[#333] dark:text-[#dcddde] mt-6 mb-2;
+}
+
+.ProseMirror h2 {
+  @apply text-2xl font-bold text-[#333] dark:text-[#dcddde] mt-5 mb-2;
+}
+
+.ProseMirror h3 {
+  @apply text-xl font-bold text-[#333] dark:text-[#dcddde] mt-4 mb-2;
+}
+
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  @apply font-bold text-[#333] dark:text-[#dcddde] mt-3 mb-2;
+}
+
+.ProseMirror strong {
+  @apply font-bold text-[#333] dark:text-[#dcddde];
+}
+
+.ProseMirror em {
+  @apply italic text-[#333] dark:text-[#dcddde];
+}
+
+.ProseMirror u {
+  @apply underline text-[#333] dark:text-[#dcddde];
+}
+
+.ProseMirror s {
+  @apply line-through text-[#999] dark:text-[#666];
+}
+
+.ProseMirror code {
+  @apply bg-[#f0f0f0] dark:bg-[#2d2d2d] text-[#d63384] dark:text-[#ff79c6] px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.ProseMirror pre {
+  @apply bg-[#f5f5f5] dark:bg-[#2d2d2d] rounded p-4 overflow-x-auto my-3 border border-[#e0e0e0] dark:border-[#3d3d3d];
+}
+
+.ProseMirror pre code {
+  @apply bg-transparent text-[#333] dark:text-[#8be9fd] px-0 py-0;
+}
+
+.ProseMirror ul {
+  @apply list-disc list-inside text-[#333] dark:text-[#dcddde] my-2 pl-4;
+}
+
+.ProseMirror ol {
+  @apply list-decimal list-inside text-[#333] dark:text-[#dcddde] my-2 pl-4;
+}
+
+.ProseMirror li {
+  @apply mb-1 text-[#333] dark:text-[#dcddde];
+}
+
+.ProseMirror blockquote {
+  @apply border-l-4 border-[#7c3aed] pl-4 italic text-[#666] dark:text-[#999] my-3 bg-[#f8f8f8] dark:bg-[#2d2d2d] py-2 pr-2;
+}
+
+.ProseMirror a {
+  @apply text-[#0066cc] dark:text-[#7c3aed] underline hover:text-[#0052a3] dark:hover:text-[#b794f6] transition-colors;
+}
+
+.ProseMirror hr {
+  @apply border-t border-[#e0e0e0] dark:border-[#2d2d2d] my-4;
+}
+
+/* Task list styling */
+.ProseMirror ul[data-type="taskList"] {
+  @apply list-none pl-0;
+}
+
+.ProseMirror li[data-type="taskItem"] {
+  @apply flex items-start gap-2 my-2 text-[#333] dark:text-[#dcddde];
+}
+
+.ProseMirror li[data-type="taskItem"] label {
+  @apply flex items-center gap-2 cursor-pointer mt-1;
+}
+
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"] {
+  @apply w-4 h-4 rounded accent-[#7c3aed] cursor-pointer flex-shrink-0;
+  appearance: none;
+  background: #f0f0f0;
+  border: 1px solid #d0d0d0;
+}
+
+.dark .ProseMirror li[data-type="taskItem"] input[type="checkbox"] {
+  @apply bg-[#2d2d2d] border-[#3d3d3d];
+}
+
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"]:checked {
+  @apply bg-[#7c3aed] border-[#7c3aed];
+}
+
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"]:hover {
+  @apply border-[#7c3aed];
+}
+
+.ProseMirror li[data-type="taskItem"] input[type="checkbox"]:checked + div {
+  @apply line-through text-[#999] dark:text-[#666];
+}
