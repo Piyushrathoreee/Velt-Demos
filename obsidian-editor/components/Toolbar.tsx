@@ -1,16 +1,9 @@
-'use client';
+"use client";
 
-import React, { useContext } from 'react';
-import {
-  Menu,
-  Search,
-  PanelRight,
-  Settings,
-  Moon,
-  Sun,
-} from 'lucide-react';
-import { useRichEditor } from './EditorContext';
-import { ThemeContext } from './ThemeContext';
+import React, { useContext } from "react";
+import { Menu, PanelRight, FileText, GitFork, Moon, Sun } from "lucide-react";
+import { useEditorStore } from "@/lib/store";
+import { ThemeContext } from "./ThemeContext";
 
 interface ToolbarProps {
   sidebarOpen: boolean;
@@ -25,54 +18,95 @@ export default function Toolbar({
   propertiesOpen,
   setPropertiesOpen,
 }: ToolbarProps) {
-  const editor = useRichEditor();
   const themeContext = useContext(ThemeContext);
-  const theme = themeContext?.theme || 'dark';
+  const theme = themeContext?.theme || "dark";
   const toggleTheme = themeContext?.toggleTheme || (() => {});
+  const activeView = useEditorStore((state) => state.activeView);
+  const setActiveView = useEditorStore((state) => state.setActiveView);
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 border-b border-[#e0e0e0] dark:border-[#2d2d2d] bg-white dark:bg-[#1a1a1a]">
+    <div
+      className="flex items-center justify-between px-2 py-1.5"
+      style={{
+        background: "var(--bg-primary)",
+        borderBottom: "1px solid var(--border)",
+      }}
+    >
       {/* Left Section */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-1.5 hover:bg-[#f0f0f0] dark:hover:bg-[#2d2d2d] rounded transition-colors text-[#333] dark:text-[#888]"
+          className="p-1.5 rounded transition-colors"
+          style={{ color: "var(--text-muted)" }}
           title="Toggle sidebar"
         >
-          <Menu size={18} />
+          <Menu size={16} />
         </button>
+      </div>
 
-        <div className="h-6 w-px bg-[#e0e0e0] dark:bg-[#2d2d2d]" />
+      {/* Center: View Tabs */}
+      <div
+        className="flex items-center rounded-md p-0.5"
+        style={{ background: "var(--bg-secondary)" }}
+      >
+        <button
+          onClick={() => setActiveView("editor")}
+          className="flex items-center gap-1.5 px-3 py-1 text-xs rounded transition-all"
+          style={{
+            background:
+              activeView === "editor" ? "var(--bg-active)" : "transparent",
+            color:
+              activeView === "editor"
+                ? "var(--text-primary)"
+                : "var(--text-muted)",
+          }}
+        >
+          <FileText size={13} />
+          Editor
+        </button>
+        <button
+          onClick={() => setActiveView("graph")}
+          className="flex items-center gap-1.5 px-3 py-1 text-xs rounded transition-all"
+          style={{
+            background:
+              activeView === "graph" ? "var(--bg-active)" : "transparent",
+            color:
+              activeView === "graph"
+                ? "var(--text-primary)"
+                : "var(--text-muted)",
+          }}
+        >
+          <GitFork size={13} />
+          Graph
+        </button>
       </div>
 
       {/* Right Section */}
       <div className="flex items-center gap-2">
-        <button className="p-1.5 hover:bg-[#f0f0f0] dark:hover:bg-[#2d2d2d] rounded transition-colors text-[#333] dark:text-[#888]" title="Search">
-          <Search size={16} />
-        </button>
+        <div
+          className="h-5 w-px"
+          style={{ background: "var(--border-light)" }}
+        />
 
         <button
           onClick={() => setPropertiesOpen(!propertiesOpen)}
-          className={`p-1.5 rounded transition-colors ${
-            propertiesOpen
-              ? 'bg-[#f0f0f0] dark:bg-[#2d2d2d] text-[#7c3aed] dark:text-[#7c3aed]'
-              : 'hover:bg-[#f0f0f0] dark:hover:bg-[#2d2d2d] text-[#333] dark:text-[#888]'
-          }`}
-          title="Toggle properties panel"
+          className="p-1.5 rounded transition-colors"
+          style={{
+            background: propertiesOpen ? "var(--bg-hover)" : "transparent",
+            color: propertiesOpen ? "var(--accent)" : "var(--text-muted)",
+          }}
+          title="Toggle properties"
         >
           <PanelRight size={16} />
         </button>
 
-        <button 
+        <button
           onClick={toggleTheme}
-          className="p-1.5 hover:bg-[#f0f0f0] dark:hover:bg-[#2d2d2d] rounded transition-colors text-[#333] dark:text-[#888]" 
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          className="p-1.5 rounded transition-colors"
+          style={{ color: "var(--text-muted)" }}
+          title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
         >
-          {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
-
-        <button className="p-1.5 hover:bg-[#f0f0f0] dark:hover:bg-[#2d2d2d] rounded transition-colors text-[#333] dark:text-[#888]" title="Settings">
-          <Settings size={16} />
+          {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
         </button>
       </div>
     </div>

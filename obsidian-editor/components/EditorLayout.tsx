@@ -1,40 +1,43 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Sidebar from './Sidebar';
-import Editor from './Editor';
-import PropertiesPanel from './PropertiesPanel';
-import Toolbar from './Toolbar';
-import { useEditorStore } from '@/lib/store';
+import React, { useState } from "react";
+import Sidebar from "./Sidebar";
+import Editor from "./Editor";
+import PropertiesPanel from "./PropertiesPanel";
+import Toolbar from "./Toolbar";
+import GraphView from "./GraphView";
+import { useEditorStore } from "@/lib/store";
 
 export default function EditorLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [propertiesOpen, setPropertiesOpen] = useState(true);
-  const currentDocument = useEditorStore((state) => state.currentDocument);
+  const activeView = useEditorStore((state) => state.activeView);
 
   return (
-    <div className="flex h-screen w-full bg-white dark:bg-[#121212] text-[#333] dark:text-[#dcddde]">
+    <div
+      className="flex h-screen w-full"
+      style={{
+        background: "var(--bg-primary)",
+        color: "var(--text-secondary)",
+      }}
+    >
       {/* Sidebar */}
-      {sidebarOpen && (
-        <Sidebar 
-          onToggle={() => setSidebarOpen(!sidebarOpen)} 
-        />
-      )}
+      {sidebarOpen && <Sidebar />}
 
-      {/* Main Editor Section */}
+      {/* Main Section */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Toolbar */}
-        <Toolbar 
+        <Toolbar
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           propertiesOpen={propertiesOpen}
           setPropertiesOpen={setPropertiesOpen}
         />
 
-        {/* Editor Area */}
+        {/* Content Area */}
         <div className="flex-1 flex overflow-hidden">
-          <Editor />
-          {propertiesOpen && <PropertiesPanel />}
+          {activeView === "editor" ? <Editor /> : <GraphView />}
+          {propertiesOpen && activeView === "editor" && <PropertiesPanel />}
         </div>
       </div>
     </div>

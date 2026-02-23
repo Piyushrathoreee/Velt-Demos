@@ -1,141 +1,185 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import {
-  Clock,
-  Tag,
-  CalendarDays,
-  Info,
-  X,
-} from 'lucide-react';
-import { useEditorStore } from '@/lib/store';
+import React, { useState } from "react";
+import { Clock, Tag, CalendarDays, Info, X, FileText } from "lucide-react";
+import { useEditorStore } from "@/lib/store";
 
 export default function PropertiesPanel() {
   const currentDocument = useEditorStore((state) => state.currentDocument);
-  const [tags, setTags] = useState<string[]>(['important', 'documentation']);
-  const [newTag, setNewTag] = useState('');
+  const updateDocument = useEditorStore((state) => state.updateDocument);
+  const [newTag, setNewTag] = useState("");
 
   if (!currentDocument) {
     return null;
   }
 
+  const tags = currentDocument.tags || [];
+
   const addTag = () => {
-    if (newTag.trim() && !tags.includes(newTag)) {
-      setTags([...tags, newTag.trim()]);
-      setNewTag('');
+    if (newTag.trim() && !tags.includes(newTag.trim())) {
+      updateDocument(currentDocument.id, {
+        tags: [...tags, newTag.trim()],
+      });
+      setNewTag("");
     }
   };
 
   const removeTag = (tag: string) => {
-    setTags(tags.filter((t) => t !== tag));
+    updateDocument(currentDocument.id, {
+      tags: tags.filter((t) => t !== tag),
+    });
   };
 
+  const wordCount =
+    currentDocument.content
+      ?.replace(/<[^>]*>/g, " ")
+      .split(/\s+/)
+      .filter(Boolean).length || 0;
+
+  const sectionStyle = { borderBottom: "1px solid var(--border)" };
+  const labelStyle = { color: "var(--text-muted)" };
+  const valueStyle = { color: "var(--text-secondary)" };
+
   return (
-    <div className="w-80 border-l border-[#e0e0e0] dark:border-[#2d2d2d] bg-[#fafafa] dark:bg-[#0a0a0a] flex flex-col overflow-hidden">
+    <div
+      className="w-[280px] min-w-[280px] flex flex-col overflow-hidden"
+      style={{
+        background: "var(--bg-primary)",
+        borderLeft: "1px solid var(--border)",
+      }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[#e0e0e0] dark:border-[#2d2d2d]">
-        <div className="flex items-center gap-2">
-          <Info size={16} className="text-[#999] dark:text-[#888]" />
-          <h3 className="text-sm font-semibold text-[#333] dark:text-[#dcddde]">Properties</h3>
-        </div>
+      <div className="flex items-center gap-2 px-4 py-3" style={sectionStyle}>
+        <Info size={14} style={labelStyle} />
+        <h3
+          className="text-xs font-semibold uppercase tracking-wider"
+          style={labelStyle}
+        >
+          Properties
+        </h3>
       </div>
 
       {/* Properties Content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Document Name */}
-        <div className="px-4 py-4 border-b border-[#e0e0e0] dark:border-[#2d2d2d]">
-          <label className="text-xs text-[#999] dark:text-[#888] uppercase font-semibold block mb-2">
-            Document
-          </label>
-          <input
-            type="text"
-            value={currentDocument.name}
-            readOnly
-            className="w-full px-2 py-1.5 bg-white dark:bg-[#1a1a1a] border border-[#e0e0e0] dark:border-[#2d2d2d] rounded text-sm text-[#333] dark:text-[#dcddde] focus:outline-none"
-          />
-        </div>
-
-        {/* Created Date */}
-        <div className="px-4 py-4 border-b border-[#e0e0e0] dark:border-[#2d2d2d]">
-          <div className="flex items-center gap-2 mb-2">
-            <CalendarDays size={14} className="text-[#999] dark:text-[#888]" />
-            <label className="text-xs text-[#999] dark:text-[#888] uppercase font-semibold">
-              Created
+        {/* Document Info */}
+        <div className="px-4 py-3" style={sectionStyle}>
+          <div className="flex items-center gap-2 mb-1.5">
+            <FileText size={13} style={labelStyle} />
+            <label
+              className="text-[11px] uppercase font-semibold tracking-wider"
+              style={labelStyle}
+            >
+              Name
             </label>
           </div>
-          <p className="text-sm text-[#333] dark:text-[#dcddde]">
-            {currentDocument.createdAt.toLocaleString()}
+          <p className="text-sm pl-5" style={valueStyle}>
+            {currentDocument.name}
           </p>
         </div>
 
-        {/* Updated Date */}
-        <div className="px-4 py-4 border-b border-[#e0e0e0] dark:border-[#2d2d2d]">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock size={14} className="text-[#999] dark:text-[#888]" />
-            <label className="text-xs text-[#999] dark:text-[#888] uppercase font-semibold">
-              Updated
+        {/* Created */}
+        <div className="px-4 py-3" style={sectionStyle}>
+          <div className="flex items-center gap-2 mb-1.5">
+            <CalendarDays size={13} style={labelStyle} />
+            <label
+              className="text-[11px] uppercase font-semibold tracking-wider"
+              style={labelStyle}
+            >
+              Created
             </label>
           </div>
-          <p className="text-sm text-[#333] dark:text-[#dcddde]">
-            {currentDocument.updatedAt.toLocaleString()}
+          <p className="text-sm pl-5" style={valueStyle}>
+            {currentDocument.createdAt.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
+          </p>
+        </div>
+
+        {/* Updated */}
+        <div className="px-4 py-3" style={sectionStyle}>
+          <div className="flex items-center gap-2 mb-1.5">
+            <Clock size={13} style={labelStyle} />
+            <label
+              className="text-[11px] uppercase font-semibold tracking-wider"
+              style={labelStyle}
+            >
+              Modified
+            </label>
+          </div>
+          <p className="text-sm pl-5" style={valueStyle}>
+            {currentDocument.updatedAt.toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+            })}
           </p>
         </div>
 
         {/* Word Count */}
-        <div className="px-4 py-4 border-b border-[#e0e0e0] dark:border-[#2d2d2d]">
-          <label className="text-xs text-[#999] dark:text-[#888] uppercase font-semibold block mb-2">
-            Word Count
-          </label>
-          <p className="text-sm text-[#333] dark:text-[#dcddde]">
-            {currentDocument.content?.split(/\s+/).filter(Boolean).length || 0} words
+        <div className="px-4 py-3" style={sectionStyle}>
+          <div className="flex items-center gap-2 mb-1.5">
+            <FileText size={13} style={labelStyle} />
+            <label
+              className="text-[11px] uppercase font-semibold tracking-wider"
+              style={labelStyle}
+            >
+              Words
+            </label>
+          </div>
+          <p className="text-sm pl-5" style={valueStyle}>
+            {wordCount}
           </p>
         </div>
 
         {/* Tags */}
-        <div className="px-4 py-4">
+        <div className="px-4 py-3">
           <div className="flex items-center gap-2 mb-2">
-            <Tag size={14} className="text-[#999] dark:text-[#888]" />
-            <label className="text-xs text-[#999] dark:text-[#888] uppercase font-semibold">
+            <Tag size={13} style={labelStyle} />
+            <label
+              className="text-[11px] uppercase font-semibold tracking-wider"
+              style={labelStyle}
+            >
               Tags
             </label>
           </div>
 
           {/* Tag Input */}
-          <div className="flex gap-2 mb-3">
+          <div className="flex gap-1.5 mb-3 pl-5">
             <input
               type="text"
               value={newTag}
               onChange={(e) => setNewTag(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
                   e.preventDefault();
                   addTag();
                 }
               }}
               placeholder="Add tag..."
-              className="flex-1 px-2 py-1.5 text-xs bg-white dark:bg-[#1a1a1a] border border-[#e0e0e0] dark:border-[#2d2d2d] rounded text-[#333] dark:text-[#dcddde] focus:outline-none focus:border-[#7c3aed]"
+              className="flex-1 px-2 py-1 text-xs rounded focus:outline-none focus:border-[#7c3aed] transition-colors"
+              style={{
+                background: "var(--bg-input)",
+                border: "1px solid var(--border-light)",
+                color: "var(--text-secondary)",
+              }}
             />
-            <button
-              onClick={addTag}
-              className="px-2 py-1.5 text-xs bg-[#f0f0f0] dark:bg-[#2d2d2d] hover:bg-[#e0e0e0] dark:hover:bg-[#3d3d3d] rounded transition-colors text-[#333] dark:text-[#dcddde]"
-            >
-              Add
-            </button>
           </div>
 
           {/* Tags Display */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 pl-5">
             {tags.map((tag) => (
               <div
                 key={tag}
-                className="flex items-center gap-1 px-2 py-1 bg-[#7c3aed] bg-opacity-20 border border-[#7c3aed] border-opacity-30 rounded text-xs text-[#7c3aed]"
+                className="flex items-center gap-1 px-2 py-0.5 bg-[#7c3aed]/15 border border-[#7c3aed]/25 rounded text-[11px] text-[#a78bfa] group"
               >
-                <span>{tag}</span>
+                <span># {tag}</span>
                 <button
                   onClick={() => removeTag(tag)}
-                  className="hover:text-[#dcddde]"
+                  className="opacity-0 group-hover:opacity-100 hover:text-white transition-opacity"
                 >
-                  <X size={12} />
+                  <X size={10} />
                 </button>
               </div>
             ))}
