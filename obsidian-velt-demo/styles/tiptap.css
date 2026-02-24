@@ -1,0 +1,272 @@
+/**
+ * TipTap Editor Styles — Obsidian Theme
+ */
+
+/* TipTap Editor Content */
+.tiptap-editor-content {
+  font-family: "Inter", sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.tiptap-editor-content .ProseMirror {
+  padding: 16px 32px;
+  min-height: 100%;
+  outline: none;
+}
+
+.tiptap-editor-content .ProseMirror:focus {
+  outline: none;
+}
+
+.tiptap-editor-content .ProseMirror > * + * {
+  margin-top: 0.5em;
+}
+
+/* Headings */
+.tiptap-editor-content h1,
+.tiptap-editor-content .ProseMirror h1 {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-primary);
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.tiptap-editor-content h2,
+.tiptap-editor-content .ProseMirror h2 {
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+  margin-top: 20px;
+  margin-bottom: 8px;
+}
+
+.tiptap-editor-content h3,
+.tiptap-editor-content .ProseMirror h3 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+
+/* Inline heading marks (CRDT compatible) */
+.tiptap-editor-content span[data-heading="h1"] {
+  font-family: "Urbanist", sans-serif;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.tiptap-editor-content span[data-heading="h2"] {
+  font-family: "Urbanist", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.tiptap-editor-content span[data-heading="h3"] {
+  font-family: "Urbanist", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+/* Paragraph */
+.tiptap-editor-content p {
+  margin-bottom: 4px;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.tiptap-editor-content p.is-editor-empty:first-child::before {
+  color: var(--text-faint);
+  content: "Start typing...";
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Bold, Italic, Underline */
+.tiptap-editor-content strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tiptap-editor-content em {
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.tiptap-editor-content u {
+  text-decoration: underline;
+}
+
+.tiptap-editor-content s {
+  text-decoration: line-through;
+  color: var(--strikethrough);
+}
+
+/* Code */
+.tiptap-editor-content code {
+  background: var(--code-bg);
+  color: var(--code-text);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 13px;
+  font-family: "Geist Mono", monospace;
+}
+
+.tiptap-editor-content pre {
+  background: var(--code-block-bg);
+  border: 1px solid var(--code-block-border);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  margin: 12px 0;
+}
+
+.tiptap-editor-content pre code {
+  background: transparent;
+  padding: 0;
+  color: var(--code-block-text);
+  font-size: 13px;
+}
+
+/* Lists */
+.tiptap-editor-content ul {
+  list-style: disc;
+  margin: 8px 0;
+  padding-left: 24px;
+  color: var(--text-secondary);
+}
+
+.tiptap-editor-content ol {
+  list-style: decimal;
+  margin: 8px 0;
+  padding-left: 24px;
+  color: var(--text-secondary);
+}
+
+.tiptap-editor-content li {
+  margin-bottom: 2px;
+}
+
+/* Blockquote */
+.tiptap-editor-content blockquote {
+  border-left: 3px solid var(--accent);
+  padding-left: 16px;
+  font-style: italic;
+  margin: 12px 0;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  color: var(--text-muted);
+}
+
+/* Links */
+.tiptap-editor-content a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: rgba(124, 58, 237, 0.4);
+  transition: text-decoration-color 0.15s ease;
+}
+
+.tiptap-editor-content a:hover {
+  text-decoration-color: #7c3aed;
+}
+
+/* Horizontal Rule */
+.tiptap-editor-content hr {
+  border: none;
+  border-top: 1px solid var(--border-light);
+  margin: 24px 0;
+}
+
+/* ============ Bubble Menu ============ */
+.bubble-menu-container {
+  z-index: 50;
+}
+
+.bubble-menu {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 6px;
+  border-radius: 9999px;
+  box-shadow: 0 0 80px rgba(0, 0, 0, 1);
+}
+
+html:not(.dark) .bubble-menu {
+  background: rgb(245, 245, 245);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+}
+
+html.dark .bubble-menu {
+  background: rgb(34, 34, 34);
+}
+
+/* ============ Collaboration Cursors ============ */
+.collaboration-cursor__caret,
+.collaboration-carets__caret {
+  border-left: 1px solid #ffffff;
+  border-right: 1px solid #ffffff;
+  margin-left: -1px;
+  margin-right: -1px;
+  pointer-events: none;
+  position: relative;
+  word-break: normal;
+}
+
+.collaboration-cursor__label,
+.collaboration-carets__label {
+  border-radius: 3px 3px 3px 0;
+  color: #0d0d0d;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 600;
+  left: -1px;
+  line-height: normal;
+  padding: 0.1rem 0.3rem;
+  position: absolute;
+  top: -1.4em;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* ============ Velt Comment Highlights ============ */
+[data-velt-comment-id] {
+  background-color: rgba(255, 195, 28, 0.2);
+  border-bottom: 2px solid rgba(255, 195, 28, 0.6);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+[data-velt-comment-id]:hover {
+  background-color: rgba(255, 195, 28, 0.3);
+}
+
+[data-velt-comment-id].active {
+  background-color: rgba(255, 195, 28, 0.4);
+}
+
+/* Comment text marks */
+velt-comment-text[comment-available="true"] {
+  background-color: rgba(255, 208, 0, 0.3);
+  border-radius: 2px;
+  padding: 2px 0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+velt-comment-text[comment-available="true"]:hover {
+  background-color: rgba(255, 208, 0, 0.4);
+}
