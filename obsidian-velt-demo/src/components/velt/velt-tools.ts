@@ -1,3 +1,5 @@
+import { subscribeToTheme, getTheme } from "../../lib/theme";
+
 export function createVeltTools(container: HTMLElement) {
   const wrapper = document.createElement("div");
   wrapper.className = "velt-tools-container";
@@ -18,6 +20,23 @@ export function createVeltTools(container: HTMLElement) {
   wrapper.appendChild(notificationsTool);
 
   container.appendChild(wrapper);
+
+  function applyDarkMode() {
+    const isDark = getTheme() === "dark";
+    const elements = wrapper.querySelectorAll(
+      "velt-presence, velt-sidebar-button, velt-huddle-tool, velt-notifications-tool",
+    );
+    elements.forEach((el) => {
+      if (isDark) {
+        el.setAttribute("dark-mode", "true");
+      } else {
+        el.removeAttribute("dark-mode");
+      }
+    });
+  }
+
+  applyDarkMode();
+  subscribeToTheme(() => applyDarkMode());
 
   return {
     el: wrapper,

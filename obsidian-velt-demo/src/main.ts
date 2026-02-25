@@ -180,6 +180,12 @@ async function init() {
     createVeltCollaboration(app);
     createUserSwitcher(document.body);
 
+    const { getTheme } = await import("./lib/theme");
+    const { setVeltDarkMode } = await import("./lib/velt");
+    setVeltDarkMode(getTheme() === "dark");
+    setTimeout(() => setVeltDarkMode(getTheme() === "dark"), 1000);
+    setTimeout(() => setVeltDarkMode(getTheme() === "dark"), 3000);
+
     console.log("[App] Initialization complete!");
   } catch (error: any) {
     console.error("[App] Initialization failed:", error);
