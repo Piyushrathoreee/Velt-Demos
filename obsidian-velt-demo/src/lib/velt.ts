@@ -1,7 +1,7 @@
 import { initVelt } from "@veltdev/client";
 
-const VELT_API_KEY = "6xTcUFtlYAlCdh11zrKB";
-const VELT_AUTH_TOKEN = "bd4d5226050470b6c658054fcdf1092a";
+const VELT_API_KEY = import.meta.env.VITE_VELT_API_KEY;
+const VELT_AUTH_TOKEN = import.meta.env.VITE_VELT_AUTH_TOKEN;
 
 let veltClient: any = null;
 
