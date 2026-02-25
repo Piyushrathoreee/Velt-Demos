@@ -1,4 +1,4 @@
-const STORAGE_KEY = "obsidian-velt-document-id";
+const STORAGE_KEY = "obsidian-velt-document-id-v2";
 
 let documentId: string | null = null;
 let isInitialized = false;
